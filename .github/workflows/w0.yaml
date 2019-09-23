@@ -18,4 +18,4 @@ jobs:
         with:
           arguments: build
       - name: show build
-        run: tree build
+        run: sudo apt install tree && tree ./build
