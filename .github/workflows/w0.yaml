@@ -1,0 +1,10 @@
+name: workflow 1
+on: [push]
+
+jobs:
+  j0:
+    name: job 0
+    runs-on: ubuntu-latest
+    steps:
+      - name: step 0
+        run: hostname
