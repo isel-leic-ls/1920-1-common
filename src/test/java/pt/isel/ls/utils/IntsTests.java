@@ -47,7 +47,7 @@ public class IntsTests {
     }
 
     @Test
-    public void indexOfBinary_succeeds_on_array_of_one_element () {
+    public void indexOfBinary_succeeds_on_array_of_one_element() {
         int[] v = {2, 2, 2};
         int ix = Ints.indexOfBinary(v, 1, 2, 2);
         assertEquals(1, ix);
