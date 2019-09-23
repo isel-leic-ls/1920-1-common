@@ -11,3 +11,11 @@ jobs:
         run: pwd
       - name: ls step
         run: ls -la
+      - uses: actions/setup-java@v1
+        with:
+          java-version: 11
+      - uses: eskatos/gradle-command-action@v1
+        with:
+          arguments: build
+      - name: show build
+        run: tree build
