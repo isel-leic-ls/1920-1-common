@@ -28,13 +28,16 @@ public class Ints {
         if (fromIndex > toIndex) {
             throw new IllegalArgumentException("from(" + fromIndex + ") > to(" + toIndex + ")");
         }
+        if(fromIndex < 0 || toIndex > a.length) {
+            throw new IllegalArgumentException("sub-array exceeds the array bounds");
+        }
 
         int low = fromIndex;
         int high = toIndex - 1;
         int mid;
 
-        while (low < high) {
-            mid = high + low / 2 + 1;
+        while (low <= high) {
+            mid = low + (high-low)/2;
             if (n > a[mid]) {
                 low = mid + 1;
             } else if (n < a[mid]) {
