@@ -1,4 +1,3 @@
-
 plugins {
     id 'java'
     id 'checkstyle'
@@ -17,3 +16,47 @@ dependencies {
     testCompile fileTree(dir: 'vendor/test', include: '*.jar')
 }
 
+String host = 'localhost', user = 'postgres', password = 'changeit'
+
+task startPostgres(type: Exec) {
+    commandLine 'docker', 'run', '--name', 'ls-postgres', '-e', "POSTGRES_PASSWORD=$password", '-p', '5432:5432/tcp', '-d', 'postgres'
+}
+
+task stopPostgres(type: Exec) {
+    commandLine 'docker', 'rm', '--force', 'ls-postgres'
+}
+
+String db = 'school'
+
+task dropDb(type:Exec) {
+    commandLine 'dropdb', '--if-exists', '-h', host, '-U', user, '-w', db
+    ext.output = {
+        return standardOutput.toString()
+    }
+    environment PGPASSWORD: password
+}
+task createDb(type:Exec) {
+    commandLine 'createdb', '-h', host, '-U', user, '-w', db
+    ext.output = {
+        return standardOutput.toString()
+    }
+    environment PGPASSWORD: password
+}
+createDb.dependsOn(dropDb)
+task initSchema(type:Exec) {
+    commandLine 'psql', '-h', host, '-U', user, '-d', db, '-w', '-f', 'src/test/sql/createSchema.sql'
+    ext.output = {
+        return standardOutput.toString()
+    }
+    environment PGPASSWORD: password
+}
+initSchema.dependsOn(createDb)
+
+task addData(type:Exec) {
+    commandLine 'psql', '-h', host, '-U', user, '-d', db, '-w', '-f', 'src/test/sql/addData.sql'
+    ext.output = {
+        return standardOutput.toString()
+    }
+    environment PGPASSWORD: password
+}
+addData.dependsOn(initSchema)

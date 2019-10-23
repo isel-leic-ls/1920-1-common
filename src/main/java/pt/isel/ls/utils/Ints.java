@@ -1,5 +1,7 @@
 package pt.isel.ls.utils;
 
+import java.util.Optional;
+
 public class Ints {
 
     /**
@@ -49,5 +51,13 @@ public class Ints {
             }
         }
         return -1;
+    }
+
+    public static Optional<Integer> parse(String value) {
+        try {
+            return Optional.of(Integer.valueOf(value));
+        } catch (NumberFormatException e) {
+            return Optional.empty();
+        }
     }
 }

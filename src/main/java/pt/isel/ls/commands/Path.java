@@ -21,7 +21,7 @@ public class Path {
         return segments[i];
     }
 
-    public static Optional<Path> of(String value) {
+    public static Optional<Path> parse(String value) {
         if (value == null || value.equals("")) {
             return Optional.empty();
         }
@@ -35,4 +35,7 @@ public class Path {
         return Optional.of(new Path(value.substring(1).trim().split("/")));
     }
 
+    public static Path of(String value) {
+        return parse(value).orElseThrow(IllegalArgumentException::new);
+    }
 }

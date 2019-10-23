@@ -2,6 +2,7 @@ package pt.isel.ls.commands;
 
 import org.junit.Test;
 import pt.isel.ls.TestUtils;
+import pt.isel.ls.commands.exceptions.CommandRequestParseException;
 
 import static org.junit.Assert.assertEquals;
 
@@ -28,7 +29,7 @@ public class CommandRequestTests {
     public void can_handle_invalid_cases() {
         TestUtils.expect(CommandRequestParseException.InvalidFormat.class, () -> CommandRequest.parse(""));
         TestUtils.expect(CommandRequestParseException.InvalidFormat.class, () -> CommandRequest.parse("a"));
-        TestUtils.expect(CommandRequestParseException.InvalidFormat.class, () -> CommandRequest.parse("a b c"));
+        TestUtils.expect(CommandRequestParseException.InvalidMethod.class, () -> CommandRequest.parse("a b c"));
 
         TestUtils.expect(CommandRequestParseException.InvalidMethod.class, () -> CommandRequest.parse("FOO /bar"));
         TestUtils.expect(CommandRequestParseException.InvalidPath.class, () -> CommandRequest.parse("GET bar"));
