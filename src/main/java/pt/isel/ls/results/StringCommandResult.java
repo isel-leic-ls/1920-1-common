@@ -1,5 +1,6 @@
 package pt.isel.ls.results;
 
+import pt.isel.ls.MediaType;
 import pt.isel.ls.commands.CommandResult;
 
 import java.io.PrintStream;
@@ -19,6 +20,11 @@ public class StringCommandResult implements CommandResult {
     @Override
     public void printTo(PrintStream ps) {
         ps.println(str);
+    }
+
+    @Override
+    public MediaType getMediaType() {
+        return MediaType.TEXT_PLAIN;
     }
 
     public static Builder builder(String title) {
