@@ -46,9 +46,7 @@ public class FirstHttpServer {
         @Override
         protected void doGet(
             HttpServletRequest request,
-            HttpServletResponse response)
-
-            throws IOException {
+            HttpServletResponse response) throws IOException {
             System.out.println(
                 String.format("[%s]Request received with method '%s' and path '%s'",
                     Thread.currentThread().getName(),
@@ -56,7 +54,7 @@ public class FirstHttpServer {
                     request.getPathInfo()));
 
             try {
-                Thread.sleep(60*1000);
+                Thread.sleep(60 * 1000);
             } catch (InterruptedException e) {
                 // ignoring it
             }
