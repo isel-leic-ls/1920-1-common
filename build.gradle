@@ -4,7 +4,7 @@ plugins {
 }
 
 checkstyle {
-    
+
 }
 
 repositories {
@@ -16,10 +16,28 @@ dependencies {
     testCompile fileTree(dir: 'vendor/test', include: '*.jar')
 }
 
-String host = 'localhost', user = 'postgres', password = 'changeit'
+task pgPrms {
+    def url = System.getenv('JDBC_DATABASE_URL')
+    if (url == null || url.allWhitespace) {
+        url = 'jdbc:postgresql://localhost:5432/school?username=postgres&password=changeit'
+        println('no JDBC_DATABASE_URL environment variable found, using default value')
+    }
+    def uri = new URI(url.substring(5))
+    ext.host = uri.host
+    ext.port = uri.port
+    ext.db = uri.path.substring(1)
+    def queryMap = uri.query.tokenize('&')*.tokenize('=').collectEntries()
+    ext.user = queryMap.user
+    ext.password = queryMap.password
+}
 
 task startPostgres(type: Exec) {
-    commandLine 'docker', 'run', '--name', 'ls-postgres', '-e', "POSTGRES_PASSWORD=$password", '-p', '5432:5432/tcp', '-d', 'postgres'
+    dependsOn pgPrms
+    commandLine 'docker', 'run',
+            '--name', 'ls-postgres',
+            '-e', "POSTGRES_PASSWORD=$pgPrms.ext.password",
+            '-p', '5432:5432/tcp',
+            '-d', 'postgres'
 }
 
 task stopPostgres(type: Exec) {
@@ -28,35 +46,58 @@ task stopPostgres(type: Exec) {
 
 String db = 'school'
 
-task dropDb(type:Exec) {
-    commandLine 'dropdb', '--if-exists', '-h', host, '-U', user, '-w', db
+task dropDb(type: Exec) {
+    dependsOn pgPrms
+    commandLine 'dropdb',
+            '--if-exists',
+            '-h', pgPrms.ext.host,
+            '-U', pgPrms.ext.user,
+            '-w', pgPrms.ext.db
     ext.output = {
         return standardOutput.toString()
     }
-    environment PGPASSWORD: password
+    environment PGPASSWORD: pgPrms.ext.password
 }
-task createDb(type:Exec) {
-    commandLine 'createdb', '-h', host, '-U', user, '-w', db
+
+task createDb(type: Exec) {
+    dependsOn pgPrms
+    commandLine 'createdb',
+            '-h', pgPrms.ext.host,
+            '-U', pgPrms.ext.user,
+            '-w', db
     ext.output = {
         return standardOutput.toString()
     }
-    environment PGPASSWORD: password
+    environment PGPASSWORD: pgPrms.ext.password
 }
 createDb.dependsOn(dropDb)
-task initSchema(type:Exec) {
-    commandLine 'psql', '-h', host, '-U', user, '-d', db, '-w', '-f', 'src/test/sql/createSchema.sql'
+task initSchema(type: Exec) {
+    dependsOn pgPrms
+    commandLine 'psql', 
+            '-h', pgPrms.ext.host, 
+            '-U', pgPrms.ext.user,
+            '-d', pgPrms.ext.db, 
+            '-w', 
+            '-f', 'src/test/sql/createSchema.sql'
     ext.output = {
         return standardOutput.toString()
     }
-    environment PGPASSWORD: password
+    environment PGPASSWORD: pgPrms.ext.password
 }
-initSchema.dependsOn(createDb)
 
-task addData(type:Exec) {
-    commandLine 'psql', '-h', host, '-U', user, '-d', db, '-w', '-f', 'src/test/sql/addData.sql'
+task addData(type: Exec) {
+    dependsOn pgPrms
+    commandLine 'psql',
+            '-h', pgPrms.ext.host,
+            '-U', pgPrms.ext.user,
+            '-d', pgPrms.ext.db,
+            '-w',
+            '-f', 'src/test/sql/addData.sql'
     ext.output = {
         return standardOutput.toString()
     }
-    environment PGPASSWORD: password
+    environment PGPASSWORD: pgPrms.ext.password
 }
 addData.dependsOn(initSchema)
+
+task stage(dependsOn: ['build'])

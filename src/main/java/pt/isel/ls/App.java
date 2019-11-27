@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class App {
 
-    private static final String CONNECTION_STRING_ENV_VAR_NAME = "PGCS";
+    private static final String CONNECTION_STRING_ENV_VAR_NAME = "JDBC_DATABASE_URL";
 
     private final Router router;
     private final AtomicBoolean exitSwitch;

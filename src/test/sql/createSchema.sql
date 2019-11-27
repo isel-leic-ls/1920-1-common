@@ -1,3 +1,6 @@
+drop table if exists students;
+drop table if exists courses;
+
 create table courses (
   cid serial primary key,
   name varchar(80)
