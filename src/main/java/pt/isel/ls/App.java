@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class App {
 
     private static final Logger logger = LoggerFactory.getLogger(App.class);
+
     private static final String CONNECTION_STRING_ENV_VAR_NAME = "JDBC_DATABASE_URL";
     private static final String PORT_ENV_VAR_NAME = "PORT";
 

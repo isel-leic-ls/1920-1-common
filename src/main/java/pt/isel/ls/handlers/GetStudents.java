@@ -1,5 +1,7 @@
 package pt.isel.ls.handlers;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pt.isel.ls.commands.CommandHandler;
 import pt.isel.ls.commands.Parameters;
 import pt.isel.ls.commands.exceptions.CommandHandlerException;
@@ -13,6 +15,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 public class GetStudents implements CommandHandler {
+
+    private static final Logger logger = LoggerFactory.getLogger(GetStudents.class);
 
     private final DataSource dataSource;
 
@@ -32,6 +36,7 @@ public class GetStudents implements CommandHandler {
             }
             return result;
         } catch (SQLException e) {
+            logger.warn("Exception while accessing DB", e);
             throw new InfrastructureException(e);
         }
     }
