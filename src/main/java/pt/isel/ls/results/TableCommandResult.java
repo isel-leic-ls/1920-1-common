@@ -54,9 +54,9 @@ public class TableCommandResult implements CommandResult {
                 )
             )
         );
-        try (PrintWriter writer = new PrintWriter(ps)) {
-            html.writeTo(writer);
-        }
+        PrintWriter writer = new PrintWriter(ps, true);
+        html.writeTo(writer);
+        writer.flush();
     }
 
     @Override

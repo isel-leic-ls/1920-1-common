@@ -4,6 +4,8 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.postgresql.ds.PGSimpleDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import pt.isel.ls.commands.CommandRequest;
 import pt.isel.ls.commands.CommandResult;
 import pt.isel.ls.commands.Method;
@@ -31,6 +33,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class App {
 
+    private static final Logger logger = LoggerFactory.getLogger(App.class);
     private static final String CONNECTION_STRING_ENV_VAR_NAME = "JDBC_DATABASE_URL";
 
     private final Router router;
@@ -82,28 +85,17 @@ public class App {
         Scanner sc = new Scanner(System.in);
         while (!exitSwitch.get()) {
             System.out.print("$ ");
-            String line = sc.nextLine();
-            try {
-                CommandRequest commandRequest = CommandRequest.parse(line);
-                Optional<Router.Result> maybeResult = router.find(commandRequest);
-                if (maybeResult.isPresent()) {
-                    Router.Result result = maybeResult.get();
-                    Parameters prms = commandRequest.getParameters().join(result.getPathParameters().getMap());
-                    CommandResult cmdResult = result.getHandler().execute(prms);
-                    cmdResult.printTo(System.out);
-                    continue;
+            if (sc.hasNextLine()) {
+                String line = sc.nextLine();
+                logger.info("handling: {}", line);
+                handleLine(line);
+            } else {
+                logger.info("No input line available, probably running in headless mode. Will park indefinitely");
+                try {
+                    server.join();
+                } catch (InterruptedException e) {
+                    throw new InfrastructureException("Unexpected interruption, exiting");
                 }
-                System.out.println("Command not found");
-            } catch (CommandRequestParseException e) {
-                System.out.println("Invalid command syntax");
-            } catch (ParameterException e) {
-                System.out.println("Invalid parameters");
-            } catch (InfrastructureException e) {
-                System.out.println("Application is not available, please try again later");
-            } catch (CommandHandlerException e) {
-                System.out.println("Unexpected error, sorry!");
-            } catch (IOException e) {
-                System.out.println("Unexpected error, sorry!");
             }
         }
         try {
@@ -113,6 +105,34 @@ public class App {
             // ignoring because there is nothing we can do here
         }
         System.out.println("exit");
+    }
+
+    private void handleLine(String line) {
+        try {
+            CommandRequest commandRequest = CommandRequest.parse(line);
+            logger.info("Command request correctly parsed");
+            Optional<Router.Result> maybeResult = router.find(commandRequest);
+            if (maybeResult.isPresent()) {
+                logger.info("Command found: {}", maybeResult.get().getHandler());
+                Router.Result result = maybeResult.get();
+                Parameters prms = commandRequest.getParameters().join(result.getPathParameters().getMap());
+                CommandResult cmdResult = result.getHandler().execute(prms);
+                cmdResult.printTo(System.out);
+                return;
+            }
+            logger.info("Command not found");
+            System.out.println("Command not found");
+        } catch (CommandRequestParseException e) {
+            System.out.println("Invalid command syntax");
+        } catch (ParameterException e) {
+            System.out.println("Invalid parameters");
+        } catch (InfrastructureException e) {
+            System.out.println("Application is not available, please try again later");
+        } catch (CommandHandlerException e) {
+            System.out.println("Unexpected error, sorry!");
+        } catch (IOException e) {
+            System.out.println("Unexpected error, sorry!");
+        }
     }
 
 
