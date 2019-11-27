@@ -35,40 +35,61 @@ public class App {
 
     private static final Logger logger = LoggerFactory.getLogger(App.class);
     private static final String CONNECTION_STRING_ENV_VAR_NAME = "JDBC_DATABASE_URL";
+    private static final String PORT_ENV_VAR_NAME = "PORT";
 
     private final Router router;
     private final AtomicBoolean exitSwitch;
+    private final Server server;
 
-    private App(Router router, AtomicBoolean exitSwitch) {
+    private App(Router router, AtomicBoolean exitSwitch, Server server) {
         this.router = router;
         this.exitSwitch = exitSwitch;
+        this.server = server;
     }
 
-    public static App build() throws InfrastructureException {
+    static App build() throws InfrastructureException {
+        String connectionString = getStringFromEnvironment(CONNECTION_STRING_ENV_VAR_NAME);
+        int port = getIntFromEnvironment(PORT_ENV_VAR_NAME, 8080);
         Router router = new Router();
         AtomicBoolean exitSwitch = new AtomicBoolean();
-        DataSource ds = buildDataSource();
+        DataSource ds = buildDataSource(connectionString);
         router.add(Method.GET, PathTemplate.of("/students"), new GetStudents(ds));
         router.add(Method.POST, PathTemplate.of("/students"), new PostStudent(ds));
         router.add(Method.EXIT, PathTemplate.of("/"), new Exit(exitSwitch));
-
-        return new App(router, exitSwitch);
+        Server server = new Server(port);
+        return new App(router, exitSwitch, server);
     }
 
-    private static DataSource buildDataSource() throws InfrastructureException {
-        String connectionString = System.getenv(CONNECTION_STRING_ENV_VAR_NAME);
-        if (connectionString == null) {
-            throw new InfrastructureException(String.format("'%s' enviroment variable is missing",
-                CONNECTION_STRING_ENV_VAR_NAME));
+    private static int getIntFromEnvironment(String envVarName, int defaultValue) throws InfrastructureException {
+        String s = System.getenv(envVarName);
+        if (s == null) {
+            return defaultValue;
         }
+        try {
+            return Integer.valueOf(s);
+        } catch (NumberFormatException e) {
+            throw new InfrastructureException(String.format("'%s' enviroment variable is not an integer",
+                envVarName));
+        }
+    }
+
+    private static String getStringFromEnvironment(String envVarName) throws InfrastructureException {
+        String s = System.getenv(envVarName);
+        if (s == null) {
+            throw new InfrastructureException(String.format("'%s' enviroment variable is missing",
+                envVarName));
+        }
+        return s;
+    }
+
+    private static DataSource buildDataSource(String connectionString) throws InfrastructureException {
         PGSimpleDataSource ds = new PGSimpleDataSource();
         ds.setUrl(connectionString);
         return ds;
     }
 
-    private Server startServer(int port) throws InfrastructureException {
+    private Server startServer() throws InfrastructureException {
         try {
-            Server server = new Server(port);
             ServletHandler handler = new ServletHandler();
             server.setHandler(handler);
             DispatchServlet servlet = new DispatchServlet(router);
@@ -81,7 +102,7 @@ public class App {
     }
 
     void run() throws InfrastructureException {
-        Server server = startServer(8080);
+        Server server = startServer();
         Scanner sc = new Scanner(System.in);
         while (!exitSwitch.get()) {
             System.out.print("$ ");
