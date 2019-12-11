@@ -1,1 +1,1 @@
-web: java -cp 'vendor/main/*:build/classes/java/main' pt.isel.ls.App
+web: java -cp 'build/libs/*' pt.isel.ls.App
