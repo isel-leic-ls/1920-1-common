@@ -124,4 +124,4 @@ task addData(type: Exec) {
     environment PGPASSWORD: pgPrms.ext.password
 }
 
-task stage(dependsOn: ['build'])
+task stage(dependsOn: ['build', 'copyRuntimeDependencies'])
